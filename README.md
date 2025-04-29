@@ -14,48 +14,69 @@ The usage of the library is very familiar to the experience you‘re used to in 
 - First-class generated specification & documentation
 - Uses [python_socketio](https://python-socketio.readthedocs.io/en/latest/) underneath
 - Fully typed using pydantic, including the [AsyncAPI spec](./fastapi_sio/schemas/asyncapi.py)
-- Streamlined emit to clients ([learn more in docs](./docs/emitting.md))
-- Forces strictly to emit correct data type  ([see the example](./docs/example.md))
+- Streamlined emit to clients ([learn more in docs](./docs/index.md#using-emitters))
+- Forces strictly to emit correct data type ([see the example](./examples/from_readme.py))
 
 ## What‘s Missing?
   
 - [ ] Serve AsyncAPI studio at /sio/docs
-    - Unfortunately, AsyncAPI studio doesn‘t work the same way as Swagger UI, there is currently no way to use CDN hosted built package and supply only single html file and URL with spec JSON
+  - Unfortunately, AsyncAPI studio doesn‘t work the same way as Swagger UI, there is currently no way to use CDN hosted built package and supply only single html file and URL with spec JSON
 - [ ] Support for more obscure fields of AsyncAPI, such as `traits`, ...
 
 ## Usage Example
 
 ```python
-fastapi_app = FastAPI()
-sio_app = FastAPISIO(app=fastapi_app)
+from fastapi import FastAPI
+from pydantic import BaseModel
+from fastapi_sio import FastAPISIO
 
-purr_channel = sio_app.create_emitter(
+class PurrModel(BaseModel):
+    detail: str
+    loudness: int
+
+class BellyRubModel(BaseModel):
+    where_exactly: str
+    scratches_num: int
+
+fastapi = FastAPI()
+sio = FastAPISIO(app=fastapi)
+
+# Mount this ASGI app. The FastAPI app is passed as the other_asgi_app
+# so you'll have access to the FastAPI routes as well.
+app = sio.asgi_app
+
+# Run with `uvicorn examples.from_readme:app`
+
+@fastapi.get("/")
+async def example_fastapi_route():
+    return {"message": "Welcome to the FastAPI-SIO example!"}
+
+purr_channel = sio.create_emitter(
     "purrs",
     model=PurrModel,
     summary="Channel for purrs",
     description="Receive any purrs here!",
 )
 
-@sio_app.on(
+@sio.on(
     "rubs",
     model=BellyRubModel,
     summary="Channel for belly rubs",
     description="Send your belly rubs through here!",
 )
 async def handle_rub(sid, data):
-    await purr_channel.emit(
-        PurrModel(loudness=2, detail="Purr for all listeners")
-    )
+    await purr_channel.emit(PurrModel(loudness=2, detail="Purr for all listeners"))
     return "Ack to the one who rubbed"
 ```
 
 👉 [Check out the example AsyncAPI documentation output!](https://studio.asyncapi.com/?url=https://raw.githubusercontent.com/marianhlavac/fastapi-sio/master/examples/from_readme_asyncapi.json)
 
 By default (you can change these values):
- - the Socket.io endpoint path is **`/sio/socket.io`** (the `socket.io` part is set automatically by some clients)
- - The AsyncAPI spec file is at **`/sio/docs/asyncapi.json`**
 
-Find more in the [examples](/docs/examples.md).
+- the Socket.io endpoint path is **`/sio/socket.io`** (the `socket.io` part is set automatically by some clients)
+- The AsyncAPI spec file is at **`/sio/docs/asyncapi.json`**
+
+Find more in the [example](./examples/from_readme.py).
 
 ## Documentation & Reference
 
@@ -63,13 +84,12 @@ Refer to the [/docs](./docs/index.md) directory to learn how to use this library
 
 _TODO: This documentation will be hosted on Github Pages in the near future, hopefully._
 
-
 ## Contribution
 
 ...
 
 ## Used by
 
-<a href="https://dronetag.cz"><img src="https://dronetag.cz/assets/logo-full.svg" height="32" /></a>
+<a href="https://dronetag.com"><img src="https://dronetag.com/assets/logo.png" height="68" /></a>
 
 [Feel free to open a PR](https://github.com/marianhlavac/fastapi-sio/pulls) to add your project or company to this list.
