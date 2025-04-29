@@ -34,6 +34,14 @@ def get_asyncapi(
         handler.model for handler in handlers if handler.model is not None
     ] + [emitter.model for emitter in emitters if emitter.model is not None]
 
+    # Check for duplicates in models
+    model_names = [model.__name__ for model in used_models]
+    duplicates = {name for name in model_names if model_names.count(name) > 1}
+    if duplicates:
+        raise ValueError(
+            f"Cannot generate AsyncAPI documentation due to duplicate models: {', '.join(duplicates)}"
+        )
+
     return AsyncAPI(
         id=AsyncAPIIdentifier(id),
         info=AsyncAPIInfo(
