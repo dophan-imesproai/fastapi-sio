@@ -79,7 +79,11 @@ class FastAPISIO:
         app.mount(mount_location, self._asgiapp)
         app.state.sio = self._sio
 
-    def asyncapi(self) -> AsyncAPI:
+    @property
+    def asgi_app(self) -> socketio.ASGIApp:
+        return self._asgiapp
+
+    def asyncapi(self) -> AsyncAPI | None:
         if not self.asyncapi_schema:
             self.asyncapi_schema = get_asyncapi(
                 id="urn:com:" + "_".join(self._app.title.lower().split(" ")),
