@@ -55,7 +55,7 @@ class FastAPISIO:
         self._asgiapp = socketio.ASGIApp(
             socketio_server=self._sio,
             socketio_path=socketio_path,
-            other_asgi_app=other_asgi_app,
+            other_asgi_app=other_asgi_app or app,
         )
         self._app = app
         self._handlers: List[SIOHandler] = []
