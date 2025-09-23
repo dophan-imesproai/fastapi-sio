@@ -45,12 +45,14 @@ class FastAPISIO:
         servers: Dict[str, AsyncAPIServer] | None = None,
         loop: AbstractEventLoop | None = None,
         monitor_clients: bool = True,
+        socketio_extra_args: Dict[Any, Any] | None = None,
     ):
         self._sio = socketio.AsyncServer(
             async_mode=async_mode,
             cors_allowed_origins=find_cors_configuration(app, default=[]),
             monitor_clients=monitor_clients,
             loop=loop,
+            **socketio_extra_args
         )
         self._asgiapp = socketio.ASGIApp(
             socketio_server=self._sio,
